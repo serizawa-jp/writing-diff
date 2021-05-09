@@ -61,6 +61,17 @@
     return diffWords(old, newWord);
   }
 
+  function isCorrect(d) {
+    if (!d) return false;
+    if (d?.length > 1) return false;
+
+    const dd = d[0];
+    if (dd?.hasOwnProperty("removed") || dd?.hasOwnProperty("added"))
+      return false;
+
+    return true;
+  }
+
   async function handleFiles(files) {
     if (!files || files.length < 1) return null;
     const f = files[0];
@@ -143,7 +154,9 @@
           <Modal
             size="lg"
             bind:open={isAnswerModalOpen}
-            modalHeading="Answer"
+            modalHeading={`Answer: ${
+              isCorrect(answerDiff) ? "✅ Correct" : "❌ Incorrect"
+            }`}
             secondaryButtonText="Close"
             primaryButtonDisabled={true}
             on:click:button--secondary={() => (isAnswerModalOpen = false)}
