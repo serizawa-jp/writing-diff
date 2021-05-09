@@ -32,14 +32,15 @@
   let isModalOpen = false;
   let isAnswerModalOpen = false;
   let currentAnswer = "";
+  let answerDiff = [];
+  let isShowQuestionModal = false;
   $: modalHeader = `Questions ${questionCurrentIndex + 1}/${questions?.length}`;
   $: _ = handleFiles(files);
   $: currentQuestion = questions[questionCurrentIndex];
 
   function openAnswerModal() {
+    answerDiff = diff(currentAnswer, questions[questionCurrentIndex]?.answer);
     isAnswerModalOpen = true;
-    console.log(isAnswerModalOpen);
-    console.log(questionCurrentIndex);
   }
 
   function closeAnswerModal() {
@@ -55,10 +56,9 @@
   }
 
   function diff(old, newWord) {
-    if (!old || !newWord) return [];
-    const d = diffWords(old, newWord);
-    console.log(d);
-    return d;
+    if (!old) old = "";
+    if (!newWord) return [];
+    return diffWords(old, newWord);
   }
 
   async function handleFiles(files) {
@@ -81,6 +81,7 @@
 
     questions = d;
     isModalOpen = true;
+    isShowQuestionModal = true;
 
     return null;
   }
@@ -91,7 +92,7 @@
   <Content style="background: none; padding: 1rem">
     <Grid>
       <Row>
-        <Column style="outline: 1px solid var(--cds-interactive-04)">
+        <Column>
           <FileUploader
             bind:files
             labelTitle="Upload file"
@@ -100,6 +101,18 @@
             accept={[".csv", ".tsv"]}
             status="complete"
           />
+        </Column>
+        <Column>
+          {#if isShowQuestionModal}
+            <Button
+              disabled={isModalOpen}
+              on:click={() => {
+                questionCurrentIndex = 0;
+                currentAnswer = "";
+                isModalOpen = true;
+              }}>Show question</Button
+            >
+          {/if}
         </Column>
       </Row>
       <Row>
@@ -122,7 +135,7 @@
               <Row>
                 <TextArea
                   bind:value={currentAnswer}
-                  placeholder="Enter a answer..."
+                  placeholder="Enter an answer..."
                 />
               </Row>
             </Grid>
@@ -140,7 +153,7 @@
               <Row>
                 <div>
                   <p>
-                    {#each diff(currentAnswer, questions[questionCurrentIndex]?.answer) as part}
+                    {#each answerDiff as part}
                       {#if part.added}
                         <span style="color: green">{part.value}</span>
                       {:else if part.removed}
