@@ -6,6 +6,7 @@
     Content,
     FileUploader,
     Grid,
+    NumberInput,
     Row,
     TextArea,
   } from "carbon-components-svelte";
@@ -27,8 +28,14 @@
 
   let theme = "g10";
   let files = [];
+  let parsedData = null;
+
+  let questionIndex = 0;
+  let answerIndex = 1;
   let questionCurrentIndex = 0;
   let questions = [];
+  let minRowLength = Number.MAX_SAFE_INTEGER;
+
   let isModalOpen = false;
   let isAnswerModalOpen = false;
   let currentAnswer = "";
@@ -37,6 +44,8 @@
   $: modalHeader = `Questions ${questionCurrentIndex + 1}/${questions?.length}`;
   $: _ = handleFiles(files);
   $: currentQuestion = questions[questionCurrentIndex];
+  $: numberInputMax = minRowLength - 1;
+  $: numberInputValidationText = `Number must be 0 <= n <= ${numberInputMax}`;
 
   function openAnswerModal() {
     answerDiff = diff(currentAnswer, questions[questionCurrentIndex]?.answer);
@@ -72,17 +81,15 @@
     return true;
   }
 
-  async function handleFiles(files) {
-    if (!files || files.length < 1) return null;
-    const f = files[0];
-    const data = await parseFile(f);
-    const d = data
+  function update() {
+    const d = parsedData
       .slice(1)
       .map((a) => {
         if (!a || a.length < 2) return null;
+        if (a.length < minRowLength) minRowLength = a.length;
 
-        const question = a[0].trim();
-        const answer = a[1].trim();
+        const question = a[questionIndex].trim();
+        const answer = a[answerIndex].trim();
 
         if (question === "" || answer === "") return null;
 
@@ -93,7 +100,13 @@
     questions = d;
     isModalOpen = true;
     isShowQuestionModal = true;
+  }
 
+  async function handleFiles(files) {
+    if (!files || files.length < 1) return null;
+    const f = files[0];
+    parsedData = await parseFile(f);
+    update();
     return null;
   }
 </script>
@@ -114,10 +127,25 @@
           />
         </Column>
         <Column>
+          <NumberInput
+            min={0}
+            bind:max={numberInputMax}
+            bind:value={questionIndex}
+            bind:invalidText={numberInputValidationText}
+            label="Index of question"
+          />
+          <NumberInput
+            min={0}
+            bind:max={numberInputMax}
+            bind:value={answerIndex}
+            bind:invalidText={numberInputValidationText}
+            label="Index of answer"
+          />
           {#if isShowQuestionModal}
             <Button
               disabled={isModalOpen}
               on:click={() => {
+                update();
                 questionCurrentIndex = 0;
                 currentAnswer = "";
                 isModalOpen = true;
