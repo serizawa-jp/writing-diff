@@ -177,6 +177,17 @@
                   placeholder="Enter an answer..."
                 />
               </Row>
+              <Row>
+                <Button
+                  on:click={() => {
+                    currentAnswer = "";
+                    if (questionCurrentIndex === questions.length - 1) return;
+                    questionCurrentIndex++;
+                  }}
+                >
+                  Skip
+                </Button>
+              </Row>
             </Grid>
           </Modal>
           <Modal
